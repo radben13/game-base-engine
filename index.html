@@ -8,7 +8,30 @@
     <link href="/styles/stylesheet.scss" rel="stylesheet" />
   </head>
   <body>
+    <header id="game-header" class="overlay"></header>
+    <div id="game-sidebar" class="overlay">
+      <button type="button" onclick="setMode('create')">
+        Create
+      </button>
+      <button type="button" onclick="setMode('touch')">
+        Touch
+      </button>
+      <button type="button" onclick="setMode('draw')">
+        Draw
+      </button>
+      <button type="button" onclick="setMode('move')">
+        Move
+      </button>
+      <button type="button" onclick="setMode('drag')">
+        Drag
+      </button>
+      <button type="button" onclick="setMode('delete')">
+        Delete
+      </button>
+    </div>
+    <div id="game-footer" class="overlay"></div>
     <div id="touch-wrapper"></div>
+    <div id="game-bg" class="background"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1,10 +1,12 @@
 import { combineLatestWith, map } from "rxjs/operators"
 import { Entity } from "./entity"
 import { World } from "./world"
-import type { Bounds } from "./bounds"
+import type { Bounds } from "./util/bounds"
 import { Subscription, Observable, Subject, BehaviorSubject } from "rxjs"
+import { boundsIntersect } from "./util/bounds"
 
 export type CameraPoint = {
+    scale: number,
     posX: number,
     posY: number,
     x: number,
@@ -20,7 +22,8 @@ export class Camera
     private position: BehaviorSubject<[number, number]> = new BehaviorSubject([0,0]);
     private scale: BehaviorSubject<number> = new BehaviorSubject(1);
 
-    private renderSubject: Subject<void> = new Subject();
+    private renderSubject: Subject<number> = new Subject();
+    private rendering: boolean = false;
 
     constructor(
             private world: World,
@@ -33,22 +36,29 @@ export class Camera
         
         this.subscriptions.push(this.getRenderingEntities$()
             .pipe(combineLatestWith(this.context$, this.dimensions$, this.getBounds$(), this.getScale$(), this.renderSubject.asObservable()))
-            .subscribe(([entities, context, dimensions, bounds, scale]) => {
+            .subscribe(([entities, context, dimensions, bounds, scale, renderTime]) => {
                 context.clearRect(0,0, dimensions.width, dimensions.height)
-                entities.forEach(entity => entity.render(context, this.getEntityCameraBounds(bounds, scale, entity)))
+                debugger
+                entities.forEach(entity => entity.render(context, this.getEntityCameraBounds(bounds, scale, entity), renderTime))
             }))
     }
 
     /**
      * render
      */
-    public render() {
-        this.renderSubject.next(void(0));
+    public async render() {
+        this.rendering = true;
+        while (this.rendering)
+            await new Promise(res => {
+                const frameId = window.requestAnimationFrame((time) => {
+                    this.renderSubject.next(time)
+                    res(frameId)
+                })
+            });
     }
     
     public pause() {
-        this.subscriptions.forEach(sub => sub.unsubscribe())
-        this.subscriptions.length = 0
+        this.rendering = false
     }
 
     public getRenderingEntities$() {
@@ -77,31 +87,17 @@ export class Camera
         ))
     }
 
-    private getPosition$(): Observable<[number, number]> {
+    public getPosition$(): Observable<[number, number]> {
         return this.position.asObservable()
     }
 
     
-    private getScale$(): Observable<number> {
+    public getScale$(): Observable<number> {
         return this.scale.asObservable()
     }
 
-    private filterWithinBounds(entities: Entity[], cameraBounds: Bounds): Entity[] {
-        const withinBounds = (bounds: Bounds) => {
-            let overrideBounds: {left?: number, right?: number, top?: number, bottom?: number} = {}
-            if (bounds.left > bounds.right) {
-                overrideBounds.left = bounds.right
-                overrideBounds.right = bounds.left
-            }
-            if (bounds.top > bounds.bottom) {
-                overrideBounds.top = bounds.bottom
-                overrideBounds.bottom = bounds.top
-            }
-            bounds = {...bounds, ...overrideBounds}
-            return bounds.right > cameraBounds.left && cameraBounds.right > bounds.left
-                && bounds.bottom > cameraBounds.top && cameraBounds.bottom > bounds.top
-        }
-        return entities.filter(entity => withinBounds(entity.getBounds()))
+    private filterWithinBounds(entities: Entity[], bounds: Bounds): Entity[] {
+        return entities.filter(entity => boundsIntersect(entity.getBounds(), bounds))
     }
 
     private getEntityCameraBounds(bounds: Bounds, scale: number, entity: Entity): Bounds {
@@ -123,6 +119,7 @@ export class Camera
     public getCameraPoint({x, y}: {x: number, y: number}): CameraPoint {
         const scale = this.scale.getValue()
         return {
+            scale,
             camX: x,
             camY: y,
             posX: this.position.getValue()[0],

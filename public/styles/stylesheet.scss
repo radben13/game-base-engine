@@ -1,17 +1,72 @@
+
 body, html {
     margin: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
     position: relative;
+    --sidebar-width: 200px;
+    --header-height: 75px;
+    --footer-height: 250px;
+    --ui-color: #eee;
 }
 #touch-wrapper {
     position: absolute;
-    top: 0;
+    top: var(--header-height);
     right: 0;
+    bottom: var(--footer-height);
+    left: var(--sidebar-width);
+    z-index: 1;
+}
+#touch-wrapper * {
+    position: relative;
+    z-index: 1;
+}
+
+#game-bg {
+    top: var(--header-height);
+    left: var(--sidebar-width);
+    bottom: var(--footer-height);
+    right: 0;
+}
+
+#game-header {
+    top: 0;
+    height: var(--header-height);
+    left: 0;
+    width: 100%;
+    display: flex;
+}
+
+#game-sidebar {
+    top: var(--header-height);
+    bottom: var(--footer-height);
+    left: 0;
+    width: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+}
+
+#game-footer {
+    top: calc(100% - var(--footer-height));
     bottom: 0;
     left: 0;
+    right: 0;
+    height: var(--footer-height);
 }
+
+.overlay {
+    position: absolute;
+    z-index: 5;
+    background-color: var(--ui-color);
+}
+
+.background {
+    position: absolute;
+    z-index: 0;
+    background-color: lightcyan;
+}
+
 .touch-canvas-wrapper {
     display: flex;
     flex-direction: column;

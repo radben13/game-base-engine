@@ -1,8 +1,8 @@
-import type { Bounds } from './bounds'
+import type { Bounds } from "./util/bounds"
 
 export interface Entity
 {
-    render(canvas: CanvasRenderingContext2D, renderBounds: Bounds): void;
+    render(canvas: CanvasRenderingContext2D, renderBounds: Bounds, renderTime: number): void;
     getSize(): [number, number];
     getPosition(): [number, number];
     getBounds(): Bounds;

@@ -56,6 +56,19 @@ export class World
             );
     }
 
+    /**
+     * getEntityAt
+     */
+    public getEntitiesAt(x: number, y: number): Entity[] {
+        return this.entitySubject.getValue().slice()
+            .sort((a,b) => a.getZValue() == b.getZValue() ? 0
+                : (a.getZValue() > b.getZValue() ? -1 : 0))
+            .filter(entity => {
+                const bounds = entity.getBounds()
+                return bounds.left < x && bounds.right > x && bounds.top < y && bounds.bottom > y
+            })
+    }
+
     private updateDimensions() {
         this.dimensionsSubject.next([this.width, this.height])
     }
