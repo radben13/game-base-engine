@@ -1,42 +1,20 @@
-import { Entity } from "../render-engine";
-import { Bounds } from "../render-engine/util/bounds";
+import { WorldObject, WorldEntity } from "../render-engine";
+import { EntityConstruct, SimpleEntity } from "../render-engine/simple-entity";
+import { CanvasRenderer } from "../render-engine/util/canvas-renderer";
+import { WorldActor } from "../render-engine/world-actor";
 
-export abstract class Shape implements Entity
+export abstract class Shape implements WorldObject
 {
-    private removeCb: () => void = () => void(0);
+    protected entity: WorldEntity;
+    protected actor: WorldActor | void = undefined;
     
-    constructor(protected x: number, protected y: number, protected width: number, protected height: number, protected zValue: number = 1) {
+    constructor(entityConstruct: EntityConstruct, renderer: CanvasRenderer = () => {}) {
+        this.entity = new SimpleEntity(renderer, entityConstruct)
     }
-
-    public render(canvas: CanvasRenderingContext2D, renderBounds: Bounds, renderTime: number): void {
-        throw new Error('Cannot render abstract Shape')
+    getEntity(): void | WorldEntity {
+        return this.entity
     }
-    public getSize(): [number, number] {
-        return [this.width, this.height]
-    }
-    public getPosition(): [number, number] {
-        return [this.x, this.y]
-    }
-    public getBounds(): Bounds {
-        return {
-            top: this.y,
-            left: this.x,
-            right: this.x + this.width,
-            bottom: this.y + this.height,
-            width: this.width,
-            height: this.height
-        }
-    }
-    public getInteractable(): boolean {
-        return false
-    }
-    public getZValue(): number {
-        return this.zValue
-    }
-    public setRemoveCb(cb: Function): void {
-        this.removeCb = () => cb(this)
-    }
-    public remove(): void {
-        this.removeCb()
+    getActor(): void | WorldActor {
+        return this.actor
     }
 }

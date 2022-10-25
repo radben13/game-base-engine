@@ -1,6 +1,8 @@
 import { combineLatestWith, map, filter } from "rxjs/operators";
 import { BouncingBall } from "./modules/game/bouncing-ball";
-import { Camera, CameraPoint, Entity, World } from "./modules/render-engine";
+import { Shape } from "./modules/game/shape";
+import { Rectangle } from "./modules/game/renderers/rectangle";
+import { Camera, CameraPoint, World, WorldObject } from "./modules/render-engine";
 import type { Bounds } from "./modules/render-engine/util/bounds";
 import { orderBounds } from "./modules/render-engine/util/bounds";
 import { TouchCanvas } from "./modules/touch-canvas";
@@ -12,24 +14,24 @@ win.touchCanvas = touchCanvas;
 touchCanvas.getCanvasClick$()
     .subscribe(({x, y}) => {
         mouseDown = false;
-        let cameraPoint = camera.getCameraPoint({x,y}), entity: Entity | void
+        let cameraPoint = camera.getCameraPoint({x,y}), object: WorldObject | void
         switch(interactMode) {
             case 'draw':
-                world.addEntity(win.entityConstructor(downPoint, cameraPoint));
+                world.addObject(win.WorldObjectConstructor(downPoint, cameraPoint));
                 break;
             case 'delete':
-                entity = world.getEntitiesAt(cameraPoint.x, cameraPoint.y).reverse().find(() => true)
-                if (entity) world.removeEntity(entity)
+                object = world.getObjectsAt(cameraPoint.x, cameraPoint.y).reverse().find(() => true)
+                if (object) world.removeObject(object)
                 break;
             case 'move':
                 win.camera.position.next([x,y]);
                 break;
             case 'create':
-                world.addEntity(new BouncingBall(cameraPoint.x - win.camera.scale.getValue() * 50, cameraPoint.y - win.camera.scale.getValue() * 50, win.camera.scale.getValue() * 50, "purple"));
+                world.addObject(new BouncingBall(cameraPoint.x - win.camera.scale.getValue() * 50, cameraPoint.y - win.camera.scale.getValue() * 50, win.camera.scale.getValue() * 50, "purple"));
                 break;
             case 'touch':
-                entity = world.getEntitiesAt(cameraPoint.x, cameraPoint.y).reverse().find(() => true)
-                if (entity && (entity as any).touch) (entity as any).touch()
+                object = world.getObjectsAt(cameraPoint.x, cameraPoint.y).reverse().find(() => true)
+                if (object && (object as any).touch) (object as any).touch()
                 break;
         }
     });
@@ -64,13 +66,13 @@ touchCanvas.getCanvasMouseMove$().pipe(
         ])
     });
 
-win.entityConstructor = (start: CameraPoint, end: CameraPoint) => {
+win.WorldObjectConstructor = (start: CameraPoint, end: CameraPoint) => {
     let width = end.x - start.x, height = end.y - start.y
     let bounds: Bounds = orderBounds({
         width, height, left: start.x, top: start.y, right: end.x, bottom: end.y
     })
     let color: string;
-    switch (win.camera.world.entities.length % 4) {
+    switch (win.camera.world.objects.length % 4) {
         case 0:
             color = 'green';
             break;
@@ -83,16 +85,13 @@ win.entityConstructor = (start: CameraPoint, end: CameraPoint) => {
         case 3:
             color = 'black'
     }
-    return {
-        bounds,
-        getBounds: () => bounds,
-        render: (context: CanvasRenderingContext2D, bounds: Bounds) => {
-            context.fillStyle = color;
-            context.fillRect(bounds.left, bounds.top, bounds.width, bounds.height)
-        },
-        setRemoveCb: (cb: Function) => {},
-        getZValue: () => 1
-    }
+    return new (class extends Shape {}) (
+        {...bounds, x: bounds.left, y: bounds.top, renderPriority: 1},
+        (context, bounds) => {
+            context.fillStyle = color
+            Rectangle(context, bounds)
+        }
+    )
 };
 
 win.camera.render();
@@ -101,4 +100,3 @@ let interactMode = 'draw'
 win.setMode = function (mode: string): void {
     interactMode = mode
 }
-

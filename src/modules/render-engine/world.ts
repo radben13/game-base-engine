@@ -1,22 +1,25 @@
-import { BehaviorSubject, Observable, of } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
 import { map } from 'rxjs/operators';
-import { Entity } from './entity';
+import { WorldEntity } from './world-entity';
+import { WorldObject } from './world-object';
 
 export class World
 {
 
-    private entities: Entity[] = [];
-    private entitySubject: BehaviorSubject<Entity[]> = new BehaviorSubject(this.entities);
-    private dimensionsSubject: BehaviorSubject<[number, number]> = new BehaviorSubject([0,0]);
+    private objects: WorldObject[];
+    private objectsSubject: BehaviorSubject<WorldObject[]>;
+    private dimensionsSubject: BehaviorSubject<[number, number]>;
 
     constructor(private width: number, private height: number) {
-        this.dimensionsSubject.next([this.width, this.height])
+        this.dimensionsSubject = new BehaviorSubject([this.width, this.height])
+        this.objects = []
+        this.objectsSubject = new BehaviorSubject(this.objects)
     }
 
     /**
      * getHeight$ in world units
      */
-    public getHeight$() {
+    public getHeight$(): Observable<number> {
         return this.dimensionsSubject.asObservable()
             .pipe(
                 map(([_, height]) => height)
@@ -26,7 +29,7 @@ export class World
     /**
      * getWidth$ in world units
      */
-     public getWidth$() {
+     public getWidth$(): Observable<number> {
         return this.dimensionsSubject.asObservable()
             .pipe(
                 map(([width]) => width)
@@ -41,71 +44,86 @@ export class World
     }
 
     /**
-     * getEntities$
+     * getObjectsWithEntities$
      */
-    public getEntities$() {
-        return this.entitySubject.asObservable()
+    public getObjectsWithEntities$(): Observable<WorldObject[]> {
+        return this.objectsSubject.asObservable()
             .pipe(
-                map(entities => entities.slice().sort((a, b) => {
-                        if (a.getZValue() == b.getZValue()) {
-                            return 0
-                        }
-                        return a.getZValue() < b.getZValue() ? -1 : 1
-                    })
-                )
+                map(objects => {
+                    const sortedEntities = this.getSortedEntities(objects)
+                    return sortedEntities.map(([index]) => objects[index])
+                })
             );
     }
 
     /**
-     * getEntityAt
+     * getObjects$
      */
-    public getEntitiesAt(x: number, y: number): Entity[] {
-        return this.entitySubject.getValue().slice()
-            .sort((a,b) => a.getZValue() == b.getZValue() ? 0
-                : (a.getZValue() > b.getZValue() ? -1 : 0))
-            .filter(entity => {
+     public getObjects$(): Observable<WorldObject[]> {
+        return this.objectsSubject.asObservable()
+    }
+
+    /**
+     * getObjectsAt
+     */
+    public getObjectsAt(x: number, y: number): WorldObject[] {
+        const objects = this.objectsSubject.getValue()
+        return this.getSortedEntities(objects)
+            .reverse()
+            .filter(([_,entity]) => {
                 const bounds = entity.getBounds()
                 return bounds.left < x && bounds.right > x && bounds.top < y && bounds.bottom > y
             })
+            .map(([index]) => objects[index])
     }
 
-    private updateDimensions() {
+    private getSortedEntities(objects: WorldObject[]): [number, WorldEntity][] {
+        const indexedEntities = objects.map((object, index) => [index, object.getEntity()])
+            .filter(([_, entity]) => Boolean(entity)) as [number,WorldEntity][]
+        return indexedEntities.sort(([_,a], [__,b]) => {
+            if (a.getRenderPriority() == b.getRenderPriority()) {
+                return 0
+            }
+            return a.getRenderPriority() < b.getRenderPriority() ? -1 : 1
+        })
+    }
+
+    private updateDimensions(): void {
         this.dimensionsSubject.next([this.width, this.height])
     }
 
-    public setWidth(width: number) {
+    public setWidth(width: number): void {
         this.width = width
         this.updateDimensions()
     }
 
-    public setHeight(height: number) {
+    public setHeight(height: number): void {
         this.height = height
         this.updateDimensions()
     }
     
-    public setDimensions(width: number, height: number) {
+    public setDimensions(width: number, height: number): void {
         this.width = width
         this.height = height
         this.updateDimensions()
     }
 
-    public addEntity(entity: Entity) {
-        entity.setRemoveCb(() => this.removeEntity(entity))
-        this.entities.push(entity)
-        this.entitySubject.next(this.entities)
+    public addObject(object: WorldObject): void {
+        this.objects.push(object)
+        this.objectsSubject.next(this.objects)
     }
 
-    public clearEntities() {
-        this.entities.length = 0
-        this.entitySubject.next(this.entities)
+    public clearObjects(): void {
+        this.objects.length = 0
+        this.objectsSubject.next(this.objects)
     }
 
-    public removeEntity(entity: Entity) {
-        if (this.entities.indexOf(entity) > -1) {
-            this.entities.splice(this.entities.indexOf(entity), 1)
-            this.entitySubject.next(this.entities)
+    public removeObject(object: WorldObject): void {
+        if (this.objects.indexOf(object) > -1) {
+            this.objects.splice(this.objects.indexOf(object), 1)
+            this.objectsSubject.next(this.objects)
         } else {
-            console.warn('Attempt to remove entity not found')
+            console.warn('Attempt to remove WorldObject which was not found')
         }
     }
 }

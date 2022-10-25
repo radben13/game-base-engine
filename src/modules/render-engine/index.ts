@@ -1,7 +1,6 @@
 export * from './camera'
 
-export * from './has-render-animation'
-
 export * from './world'
 
-export * from './entity'
+export * from './world-entity'
+export * from './world-object'
