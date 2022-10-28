@@ -86,11 +86,11 @@ win.WorldObjectConstructor = (start: CameraPoint, end: CameraPoint) => {
             color = 'black'
     }
     return new (class extends Shape {}) (
-        {...bounds, x: bounds.left, y: bounds.top, renderPriority: 1},
         (context, bounds) => {
             context.fillStyle = color
             Rectangle(context, bounds)
-        }
+        },
+        {...bounds, x: bounds.left, y: bounds.top, renderPriority: 1}
     )
 };
 

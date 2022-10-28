@@ -8,7 +8,7 @@ export abstract class Shape implements WorldObject
     protected entity: WorldEntity;
     protected actor: WorldActor | void = undefined;
     
-    constructor(entityConstruct: EntityConstruct, renderer: CanvasRenderer = () => {}) {
+    constructor(renderer: CanvasRenderer = () => {}, entityConstruct: EntityConstruct) {
         this.entity = new SimpleEntity(renderer, entityConstruct)
     }
     getEntity(): void | WorldEntity {
