@@ -29,6 +29,19 @@ export class SimpleEntity implements WorldEntity
         this.renderPriority = entityConstruct.renderPriority;
     }
 
+    getWidth(): number {
+        return this.width
+    }
+    setWidth(width: number): void {
+        this.width = width
+    }
+    getHeight(): number {
+        return this.height
+    }
+    setHeight(height: number): void {
+        this.height = height
+    }
+
     render(canvas: CanvasRenderingContext2D, renderBounds: Bounds): void {
         this.renderer(canvas, renderBounds)
     }

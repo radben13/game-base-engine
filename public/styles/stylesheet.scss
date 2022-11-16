@@ -65,6 +65,10 @@ body, html {
     position: absolute;
     z-index: 0;
     background-color: lightcyan;
+    overflow: hidden;
+}
+.bg-image {
+    width: 100%;
 }
 
 .touch-canvas-wrapper {

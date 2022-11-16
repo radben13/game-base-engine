@@ -8,39 +8,10 @@ export class World
 
     private objects: WorldObject[];
     private objectsSubject: BehaviorSubject<WorldObject[]>;
-    private dimensionsSubject: BehaviorSubject<[number, number]>;
 
-    constructor(private width: number, private height: number) {
-        this.dimensionsSubject = new BehaviorSubject([this.width, this.height])
+    constructor() {
         this.objects = []
         this.objectsSubject = new BehaviorSubject(this.objects)
-    }
-
-    /**
-     * getHeight$ in world units
-     */
-    public getHeight$(): Observable<number> {
-        return this.dimensionsSubject.asObservable()
-            .pipe(
-                map(([_, height]) => height)
-            )
-    }
-    
-    /**
-     * getWidth$ in world units
-     */
-     public getWidth$(): Observable<number> {
-        return this.dimensionsSubject.asObservable()
-            .pipe(
-                map(([width]) => width)
-            )
-    }
-
-    /**
-     * getDimensions$ in world units
-     */
-    public getDimensions$(): Observable<[number, number]> {
-        return this.dimensionsSubject.asObservable()
     }
 
     /**
@@ -86,26 +57,6 @@ export class World
             }
             return a.getRenderPriority() < b.getRenderPriority() ? -1 : 1
         })
-    }
-
-    private updateDimensions(): void {
-        this.dimensionsSubject.next([this.width, this.height])
-    }
-
-    public setWidth(width: number): void {
-        this.width = width
-        this.updateDimensions()
-    }
-
-    public setHeight(height: number): void {
-        this.height = height
-        this.updateDimensions()
-    }
-    
-    public setDimensions(width: number, height: number): void {
-        this.width = width
-        this.height = height
-        this.updateDimensions()
     }
 
     public addObject(object: WorldObject): void {

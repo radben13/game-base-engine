@@ -38,10 +38,10 @@ export class Bouncer extends WorldActor
         entity.setPosition([x, y])
     }
 
-    new class extends WorldActor {
+    // new class extends WorldActor {
         
-        public animationFrame(time: number): void {
-            this.parent.animate(time)
-        }
-    }
+    //     public animationFrame(time: number): void {
+    //         this.parent.animate(time)
+    //     }
+    // }
 }

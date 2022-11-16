@@ -52,7 +52,7 @@ const dimensions$ = touchCanvas.getCanvas$()
         })
     )
 
-const world = new World(10000,5000);
+const world = new World();
 const camera = win.camera = new Camera(world, touchCanvas.getCanvasContext$(), dimensions$);
 
 touchCanvas.getCanvasMouseMove$().pipe(

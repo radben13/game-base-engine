@@ -50,7 +50,7 @@ export class Camera
         while (this.rendering)
             await new Promise(res => {
                 const frameId = window.requestAnimationFrame((time) => {
-                    this.renderSubject.next(time)
+                    this.renderSubject.next(time);
                     res(frameId)
                 })
             });
